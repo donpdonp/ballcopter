@@ -14,7 +14,7 @@ int main() {
   ROM_SysCtlClockSet(SYSCTL_SYSDIV_4|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
   ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
   ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, LED_RED|LED_BLUE|LED_GREEN);
-  int speed = 2000;
+  int speed = 1000;
   for (;;) {
     // set the red LED pin high, others low
     ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_RED);
@@ -25,6 +25,6 @@ int main() {
 }
 
 void delayuS(int us) {
-    ROM_SysCtlDelay( (ROM_SysCtlClockGet()/3)*us ) ;  // more accurate
+    ROM_SysCtlDelay( (ROM_SysCtlClockGet()/(3*1000000))*us ) ;  // more accurate
 }
 
