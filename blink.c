@@ -10,11 +10,13 @@
 #define LED_BLUE GPIO_PIN_2
 #define LED_GREEN GPIO_PIN_3
  
+void delayuS(int);
+ 
 int main() {
   ROM_SysCtlClockSet(SYSCTL_SYSDIV_4|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
   ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
   ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, LED_RED|LED_BLUE|LED_GREEN);
-  int speed = 1000;
+  int speed = 1100;
   for (;;) {
     // set the red LED pin high, others low
     ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_RED);
@@ -25,6 +27,7 @@ int main() {
 }
 
 void delayuS(int us) {
-    ROM_SysCtlDelay( (ROM_SysCtlClockGet()/(3*1000000))*us ) ;  // more accurate
+  // loop us times, with 3 processor cycles per loop
+  ROM_SysCtlDelay( (ROM_SysCtlClockGet()/(3*1000000))*us );
 }
 
