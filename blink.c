@@ -37,9 +37,22 @@ int main() {
 
   UARTprintf("Throttle at idle (%d uS)\n", speed);
 
-  timerDelay(50);
+  timerDelay(50); // PWM at 50hz
+
+  unsigned char ucButtons;
+  unsigned char ucButtonsChanged;
 
   for (;;) {
+    ucButtons = ButtonsPoll(&ucButtonsChanged, 0);
+    if(BUTTON_PRESSED(RIGHT_BUTTON, ucButtons, ucButtonsChanged)) {
+      UARTprintf("More %d uS\n", speed);
+      speed = speed + 500;
+    }
+    if(BUTTON_PRESSED(LEFT_BUTTON, ucButtons, ucButtonsChanged)) {
+      UARTprintf("Less %d uS\n", speed);
+      speed = speed - 500;
+    }
+    delayuS(10000);
   }
 }
 
@@ -65,7 +78,6 @@ void timerHandler(void){
   ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_RED);
   delayuS(speed);
   ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_RED|LED_GREEN|LED_BLUE, 0);
-  delayuS(2000-speed);
 }
 
 void uartsetup() {
