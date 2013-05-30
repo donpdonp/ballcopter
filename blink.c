@@ -21,6 +21,9 @@ void timerHandler(void);
 void timersetup();
 void uartsetup();
 
+#define BOTTOM_SPEED_MS 1000
+#define TOP_SPEED_MS 2000
+
 int speed = 0;
 int sys_clock;
 
@@ -33,7 +36,7 @@ int main() {
   ButtonsInit();
   uartsetup();
   timersetup();
-  speed = 1000;
+  speed = BOTTOM_SPEED_MS;
 
   UARTprintf("Throttle at idle (%d uS)\n", speed);
 
@@ -45,14 +48,14 @@ int main() {
   for (;;) {
     ucButtons = ButtonsPoll(&ucButtonsChanged, 0);
     if(BUTTON_PRESSED(RIGHT_BUTTON, ucButtons, ucButtonsChanged)) {
-      if(speed < 3000) {
-        speed = speed + 250;
+      if(speed < TOP_SPEED_MS) {
+        speed = speed + 100;
         UARTprintf("More %d uS\n", speed);
       }
     }
     if(BUTTON_PRESSED(LEFT_BUTTON, ucButtons, ucButtonsChanged)) {
-      if(speed > 1000) {
-        speed = speed - 250;
+      if(speed > BOTTOM_SPEED_MS) {
+        speed = speed - 100;
         UARTprintf("Less %d uS\n", speed);
       }
     }
