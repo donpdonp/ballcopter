@@ -31,7 +31,7 @@ int main() {
 
   UARTprintf("Spinning at %d uS\n", speed);
 
-  timerDelayUs(speed);
+  timerDelayUs(1000000);
 
   for (;;) {
     // set the red LED pin high, others low
@@ -47,8 +47,9 @@ void delayuS(int us) {
   ROM_SysCtlDelay( (ROM_SysCtlClockGet()/(3*1000000))*us );
 }
 
-void timerDelayUs(unsigned long speed){
-  unsigned long ulPeriod = SysCtlClockGet()/10/2;
+void timerDelayUs(unsigned long microsec){
+  unsigned long hz = 1/(microsec/1000000);
+  unsigned long ulPeriod = SysCtlClockGet()/(2*hz);
   TimerLoadSet(TIMER0_BASE, TIMER_A, ulPeriod-1);
   IntEnable(INT_TIMER0A);
   TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
@@ -58,7 +59,7 @@ void timerDelayUs(unsigned long speed){
 
 void timerHandler(void){
   TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
-  UARTprintf("ISR FTW");
+  UARTprintf("ISR FTW\n");
 
 }
 
