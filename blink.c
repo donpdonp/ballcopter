@@ -45,12 +45,16 @@ int main() {
   for (;;) {
     ucButtons = ButtonsPoll(&ucButtonsChanged, 0);
     if(BUTTON_PRESSED(RIGHT_BUTTON, ucButtons, ucButtonsChanged)) {
-      UARTprintf("More %d uS\n", speed);
-      speed = speed + 500;
+      if(speed < 3000) {
+        speed = speed + 250;
+        UARTprintf("More %d uS\n", speed);
+      }
     }
     if(BUTTON_PRESSED(LEFT_BUTTON, ucButtons, ucButtonsChanged)) {
-      UARTprintf("Less %d uS\n", speed);
-      speed = speed - 500;
+      if(speed > 1000) {
+        speed = speed - 250;
+        UARTprintf("Less %d uS\n", speed);
+      }
     }
     delayuS(10000);
   }
