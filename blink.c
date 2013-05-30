@@ -30,6 +30,7 @@ int main() {
   ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
   ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, LED_RED|LED_BLUE|LED_GREEN);
 
+  ButtonsInit();
   uartsetup();
   timersetup();
   speed = 1000;
