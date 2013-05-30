@@ -2,9 +2,12 @@
 #include "inc/hw_memmap.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
+#include "inc/hw_ints.h"
 #include "driverlib/gpio.h"
 #include "driverlib/rom.h"
 #include "driverlib/sysctl.h"
+#include "driverlib/timer.h"
+#include "driverlib/interrupt.h"
 #include "utils/uartstdio.h"
  
 #define LED_RED GPIO_PIN_1
@@ -12,6 +15,9 @@
 #define LED_GREEN GPIO_PIN_3
  
 void delayuS(int);
+void timerDelayUs(unsigned long ulPeriod);
+void timerHandler(void);
+void timersetup();
 void uartsetup();
  
 int main() {
@@ -20,9 +26,12 @@ int main() {
   ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, LED_RED|LED_BLUE|LED_GREEN);
 
   uartsetup();
+  timersetup();
   int speed = 1100;
 
   UARTprintf("Spinning at %d uS\n", speed);
+
+  timerDelayUs(speed);
 
   for (;;) {
     // set the red LED pin high, others low
@@ -38,6 +47,21 @@ void delayuS(int us) {
   ROM_SysCtlDelay( (ROM_SysCtlClockGet()/(3*1000000))*us );
 }
 
+void timerDelayUs(unsigned long speed){
+  unsigned long ulPeriod = SysCtlClockGet()/10/2;
+  TimerLoadSet(TIMER0_BASE, TIMER_A, ulPeriod-1);
+  IntEnable(INT_TIMER0A);
+  TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+  IntMasterEnable();
+  TimerEnable(TIMER0_BASE, TIMER_A);
+}
+
+void timerHandler(void){
+  TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+  UARTprintf("ISR FTW");
+
+}
+
 void uartsetup() {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
     GPIOPinConfigure(GPIO_PA0_U0RX);
@@ -46,3 +70,7 @@ void uartsetup() {
     UARTStdioInit(0);
 }
 
+void timersetup(){
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);  
+  TimerConfigure(TIMER0_BASE, TIMER_CFG_32_BIT_PER);
+}
