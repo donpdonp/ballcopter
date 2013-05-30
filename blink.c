@@ -21,36 +21,34 @@ void timersetup();
 void uartsetup();
 
 int speed = 0;
+int sys_clock;
 
 int main() {
   ROM_SysCtlClockSet(SYSCTL_SYSDIV_4|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN); //64mhz
+  sys_clock = ROM_SysCtlClockGet();
   ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
   ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, LED_RED|LED_BLUE|LED_GREEN);
 
   uartsetup();
   timersetup();
+  speed = 1000;
 
   UARTprintf("Spinning at %d uS\n", speed);
 
   timerDelay(50);
 
   for (;;) {
-    // set the red LED pin high, others low
-    ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_RED);
-    delayuS(speed);
-    ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_RED|LED_GREEN|LED_BLUE, 0);
-    delayuS(2000-speed);
   }
 }
 
 void delayuS(int us) {
   // loop us times, with 3 processor cycles per loop
-  ROM_SysCtlDelay( (ROM_SysCtlClockGet()/(3*1000000))*us );
+  ROM_SysCtlDelay( (sys_clock/(3*1000000))*us );
 }
 
 void timerDelay(unsigned long hz){
   //unsigned long hz = 1/(microsec/1000000);
-  unsigned long ulPeriod = SysCtlClockGet()/(2*hz);
+  unsigned long ulPeriod = sys_clock/(2*hz);
   TimerLoadSet(TIMER0_BASE, TIMER_A, ulPeriod-1);
   IntEnable(INT_TIMER0A);
   TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
@@ -60,8 +58,12 @@ void timerDelay(unsigned long hz){
 
 void timerHandler(void){
   TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
-  UARTprintf("ISR FTW\n");
 
+  // set the B1 pin high, others low
+  ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_RED);
+  delayuS(speed);
+  ROM_GPIOPinWrite(GPIO_PORTB_BASE, LED_RED|LED_GREEN|LED_BLUE, 0);
+  delayuS(2000-speed);
 }
 
 void uartsetup() {
