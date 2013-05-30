@@ -15,12 +15,14 @@ void delayuS(int);
 void uartsetup();
  
 int main() {
-  ROM_SysCtlClockSet(SYSCTL_SYSDIV_4|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
+  ROM_SysCtlClockSet(SYSCTL_SYSDIV_4|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN); //64mhz
   ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
   ROM_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, LED_RED|LED_BLUE|LED_GREEN);
 
   uartsetup();
   int speed = 1100;
+
+  UARTprintf("Spinning at %d uS\n", speed);
 
   for (;;) {
     // set the red LED pin high, others low
