@@ -15,11 +15,13 @@
 #define LED_GREEN GPIO_PIN_3
  
 void delayuS(int);
-void timerDelayUs(unsigned long ulPeriod);
+void timerDelay(unsigned long ulPeriod);
 void timerHandler(void);
 void timersetup();
 void uartsetup();
- 
+
+int speed = 0;
+
 int main() {
   ROM_SysCtlClockSet(SYSCTL_SYSDIV_4|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN); //64mhz
   ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
@@ -27,11 +29,10 @@ int main() {
 
   uartsetup();
   timersetup();
-  int speed = 1100;
 
   UARTprintf("Spinning at %d uS\n", speed);
 
-  timerDelayUs(1000000);
+  timerDelay(50);
 
   for (;;) {
     // set the red LED pin high, others low
@@ -47,8 +48,8 @@ void delayuS(int us) {
   ROM_SysCtlDelay( (ROM_SysCtlClockGet()/(3*1000000))*us );
 }
 
-void timerDelayUs(unsigned long microsec){
-  unsigned long hz = 1/(microsec/1000000);
+void timerDelay(unsigned long hz){
+  //unsigned long hz = 1/(microsec/1000000);
   unsigned long ulPeriod = SysCtlClockGet()/(2*hz);
   TimerLoadSet(TIMER0_BASE, TIMER_A, ulPeriod-1);
   IntEnable(INT_TIMER0A);
