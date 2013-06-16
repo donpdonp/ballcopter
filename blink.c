@@ -45,7 +45,7 @@ int main() {
   mpusetup();
   speed = BOTTOM_SPEED_MS;
 
-  UARTprintf("*** PringleCopter Start ***");
+  UARTprintf("\n*** PringleCopter Start ***\n");
   UARTprintf("Throttle at idle (%d uS)\n", speed);
 
   timerDelay(50); // PWM at 50hz
