@@ -163,6 +163,9 @@ void mpusetup(){
   // MPU-6050 Client Address 1101000
   unsigned long who_am_i = I2CRegRead(0x75);
   UARTprintf("MPU-6050 WhoAmI: 0x%x\n", who_am_i);
+
+  unsigned char wake_mode = 1;
+  I2CRegWrite(0x6b, wake_mode);
   mpuread();
   for(int i=0; i<10; i++) {
     delayuS(500000);
@@ -171,9 +174,12 @@ void mpusetup(){
 }
 
 void mpuread(){
-  unsigned long x,y,z;
-  x = I2CRegRead(0x3c);
-  y = I2CRegRead(0x3e);
-  z = I2CRegRead(0x40);
-  UARTprintf("X: %d Y: %d Z: %d\n", x,y,z);
+  unsigned long xh,xl,yh,yl,zh,zl;
+  xh = I2CRegRead(0x3b);
+  xl = I2CRegRead(0x3c);
+  yh = I2CRegRead(0x3d);
+  yl = I2CRegRead(0x3e);
+  zh = I2CRegRead(0x3f);
+  zl = I2CRegRead(0x40);
+  UARTprintf("X: %3d %3d Y: %3d %3d Z: %3d %3d\n", xh,xl,yh,yl,zh,zl);
 }
