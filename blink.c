@@ -27,6 +27,7 @@ unsigned long i2c_read();
 unsigned long I2CRegRead(unsigned char reg);
 void I2CRegWrite(unsigned char reg, unsigned char value);
 void mpusetup();
+void mpuread();
 
 #define BOTTOM_SPEED_MS 1000
 #define TOP_SPEED_MS 2000
@@ -134,16 +135,13 @@ unsigned long I2CRegRead(unsigned char reg){
 }
 
 void I2CRegWrite(unsigned char reg, unsigned char value){
-  ROM_I2CMasterSlaveAddrSet(I2C1_MASTER_BASE, 0x68, false); // Write
-  ROM_I2CMasterDataPut(I2C1_MASTER_BASE, reg); // Mode Cntl:
-  // Initiate send of character from Master to Slave
+  ROM_I2CMasterSlaveAddrSet(I2C1_MASTER_BASE, MPU_6050_ID, false); // Write
+  ROM_I2CMasterDataPut(I2C1_MASTER_BASE, reg); // Write Register
   ROM_I2CMasterControl(I2C1_MASTER_BASE, I2C_MASTER_CMD_BURST_SEND_START);
-
   while(ROM_I2CMasterBusy(I2C1_MASTER_BASE))  {}
 
-  ROM_I2CMasterDataPut(I2C1_MASTER_BASE, value);  // bits 0,1 In - rest Out
+  ROM_I2CMasterDataPut(I2C1_MASTER_BASE, value);  // Write Value
   ROM_I2CMasterControl(I2C1_MASTER_BASE, I2C_MASTER_CMD_BURST_SEND_FINISH);
-
   while(ROM_I2CMasterBusy(I2C1_MASTER_BASE))  {}
 }
 
@@ -165,4 +163,17 @@ void mpusetup(){
   // MPU-6050 Client Address 1101000
   unsigned long who_am_i = I2CRegRead(0x75);
   UARTprintf("MPU-6050 WhoAmI: 0x%x\n", who_am_i);
+  mpuread();
+  for(int i=0; i<10; i++) {
+    delayuS(500000);
+    mpuread();
+  }
+}
+
+void mpuread(){
+  unsigned long x,y,z;
+  x = I2CRegRead(0x3c);
+  y = I2CRegRead(0x3e);
+  z = I2CRegRead(0x40);
+  UARTprintf("X: %d Y: %d Z: %d\n", x,y,z);
 }
