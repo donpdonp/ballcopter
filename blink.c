@@ -8,18 +8,23 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/timer.h"
 #include "driverlib/interrupt.h"
+#include "driverlib/i2c.h"
 #include "utils/uartstdio.h"
 #include "drivers/buttons.h"
 
 #define LED_RED GPIO_PIN_1
 #define LED_BLUE GPIO_PIN_2
 #define LED_GREEN GPIO_PIN_3
- 
+
 void delayuS(int);
 void timerDelay(unsigned long ulPeriod);
 void timerHandler(void);
 void timersetup();
 void uartsetup();
+void i2csetup();
+unsigned long I2CRegRead(unsigned char reg);
+void I2CRegWrite(unsigned char reg, unsigned char value);
+void mpusetup();
 
 #define BOTTOM_SPEED_MS 1000
 #define TOP_SPEED_MS 2000
@@ -36,8 +41,11 @@ int main() {
   ButtonsInit();
   uartsetup();
   timersetup();
+  i2csetup();
+  mpusetup();
   speed = BOTTOM_SPEED_MS;
 
+  UARTprintf("*** PringleCopter Start ***");
   UARTprintf("Throttle at idle (%d uS)\n", speed);
 
   timerDelay(50); // PWM at 50hz
@@ -96,6 +104,57 @@ void uartsetup() {
 }
 
 void timersetup(){
-  SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);  
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
   TimerConfigure(TIMER0_BASE, TIMER_CFG_32_BIT_PER);
+}
+
+void i2csetup(){
+  ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C1);
+  ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+
+
+  GPIOPinTypeI2CSCL(GPIO_PORTA_BASE, GPIO_PIN_6);
+  ROM_GPIOPinTypeI2C(GPIO_PORTA_BASE, GPIO_PIN_7);
+
+  ROM_GPIOPinConfigure(GPIO_PA6_I2C1SCL);
+  ROM_GPIOPinConfigure(GPIO_PA7_I2C1SDA);
+
+  ROM_I2CMasterInitExpClk(I2C1_MASTER_BASE, ROM_SysCtlClockGet(), false);
+  ROM_SysCtlDelay(10000);  // delay mandatory here - otherwise portion of SlaveAddrSet() lost!
+
+  // MPU-6050 Client Address 1101000
+  unsigned long who_am_i = I2CRegRead(0x75);
+  UARTprintf("MPU-6050 WhoAmI: %x\n", who_am_i);
+}
+
+unsigned long I2CRegRead(unsigned char reg){
+  ROM_I2CMasterSlaveAddrSet(I2C1_MASTER_BASE, 0x68, false); // Write
+  ROM_I2CMasterDataPut(I2C1_MASTER_BASE, reg); // Mode Cntl:
+  ROM_I2CMasterControl(I2C1_MASTER_BASE, I2C_MASTER_CMD_SINGLE_SEND);
+  while(ROM_I2CMasterBusy(I2C1_MASTER_BASE))  {}
+
+  ROM_I2CMasterSlaveAddrSet(I2C1_MASTER_BASE, 0x68, true); // Read
+  ROM_I2CMasterControl(I2C1_MASTER_BASE, I2C_MASTER_CMD_SINGLE_RECEIVE);
+  while(ROM_I2CMasterBusy(I2C1_MASTER_BASE))  {}
+  unsigned long value;
+  value = ROM_I2CMasterDataGet(I2C1_MASTER_BASE);
+  return value;
+}
+
+void I2CRegWrite(unsigned char reg, unsigned char value){
+  ROM_I2CMasterSlaveAddrSet(I2C1_MASTER_BASE, 0x68, false); // Write
+  ROM_I2CMasterDataPut(I2C1_MASTER_BASE, reg); // Mode Cntl:
+  // Initiate send of character from Master to Slave
+  ROM_I2CMasterControl(I2C1_MASTER_BASE, I2C_MASTER_CMD_BURST_SEND_START);
+
+  while(ROM_I2CMasterBusy(I2C1_MASTER_BASE))  {}
+
+  ROM_I2CMasterDataPut(I2C1_MASTER_BASE, value);  // bits 0,1 In - rest Out
+  ROM_I2CMasterControl(I2C1_MASTER_BASE, I2C_MASTER_CMD_BURST_SEND_FINISH);
+
+  while(ROM_I2CMasterBusy(I2C1_MASTER_BASE))  {}
+}
+
+void mpusetup(){
+
 }
