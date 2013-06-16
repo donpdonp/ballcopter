@@ -22,6 +22,7 @@ void timerHandler(void);
 void timersetup();
 void uartsetup();
 void i2csetup();
+void i2c_send(unsigned char byte);
 unsigned long I2CRegRead(unsigned char reg);
 void I2CRegWrite(unsigned char reg, unsigned char value);
 void mpusetup();
@@ -122,17 +123,10 @@ void i2csetup(){
   ROM_I2CMasterInitExpClk(I2C1_MASTER_BASE, ROM_SysCtlClockGet(), false);
   ROM_SysCtlDelay(10000);  // delay mandatory here - otherwise portion of SlaveAddrSet() lost!
 
-  // MPU-6050 Client Address 1101000
-  unsigned long who_am_i = I2CRegRead(0x75);
-  UARTprintf("MPU-6050 WhoAmI: %x\n", who_am_i);
 }
 
 unsigned long I2CRegRead(unsigned char reg){
-  ROM_I2CMasterSlaveAddrSet(I2C1_MASTER_BASE, 0x68, false); // Write
-  ROM_I2CMasterDataPut(I2C1_MASTER_BASE, reg); // Mode Cntl:
-  ROM_I2CMasterControl(I2C1_MASTER_BASE, I2C_MASTER_CMD_SINGLE_SEND);
-  while(ROM_I2CMasterBusy(I2C1_MASTER_BASE))  {}
-
+  i2c_send(reg);
   ROM_I2CMasterSlaveAddrSet(I2C1_MASTER_BASE, 0x68, true); // Read
   ROM_I2CMasterControl(I2C1_MASTER_BASE, I2C_MASTER_CMD_SINGLE_RECEIVE);
   while(ROM_I2CMasterBusy(I2C1_MASTER_BASE))  {}
@@ -155,6 +149,15 @@ void I2CRegWrite(unsigned char reg, unsigned char value){
   while(ROM_I2CMasterBusy(I2C1_MASTER_BASE))  {}
 }
 
-void mpusetup(){
+void i2c_send(unsigned char byte){
+  ROM_I2CMasterSlaveAddrSet(I2C1_MASTER_BASE, 0x68, false); // Write
+  ROM_I2CMasterDataPut(I2C1_MASTER_BASE, byte);
+  ROM_I2CMasterControl(I2C1_MASTER_BASE, I2C_MASTER_CMD_SINGLE_SEND);
+  while(ROM_I2CMasterBusy(I2C1_MASTER_BASE))  {}
+}
 
+void mpusetup(){
+  // MPU-6050 Client Address 1101000
+  unsigned long who_am_i = I2CRegRead(0x75);
+  UARTprintf("MPU-6050 WhoAmI: %x\n", who_am_i);
 }
